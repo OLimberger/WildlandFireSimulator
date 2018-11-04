@@ -47,7 +47,7 @@ public:
     }
 
 private:
-    int fixedSeed = 42; //fixed seed for sensitivity analysis
+    std::mt19937::result_type fixedSeed = 42; //fixed seed for sensitivity analysis
     static RandomNumberGenerator *s_instance;
     //RandomNumberGenerator() : m_engine{rd()}, m_distribution{0.f, 1.f} {}
     RandomNumberGenerator() : m_engine{fixedSeed}, m_distribution{0.f, 1.f} {}
@@ -60,7 +60,7 @@ private:
 
 RandomNumberGenerator *RandomNumberGenerator::s_instance;
 
-void _assert(bool condition, const char *message)
+void verboseAssert(bool condition, const char *message)
 {
     if (!condition) {
         std::cerr << message << std::endl;
