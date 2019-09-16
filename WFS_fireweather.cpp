@@ -11,7 +11,7 @@ FireWeather::FireWeather()
  * \param fileName
  */
 void
-FireWeather::getFixedFireWeatherParameter(const std::string fileName, FireWeatherVariables *weather){
+FireWeather::getFixedFireWeatherParameter(const std::string &fileName, FireWeatherVariables *weather){
     auto reader = csv::Reader{',', '#'};
     auto parameters = reader.parse(fileName);
 
@@ -37,7 +37,7 @@ FireWeather::getFixedFireWeatherParameter(const std::string fileName, FireWeathe
  * \param landscape
  */
 void
-FireWeather::importMeteorologicalParameter(const std::string fileName)
+FireWeather::importMeteorologicalParameter(const std::string &fileName)
 {
     auto reader = csv::Reader{',', '#'};
     auto parameters = reader.parse(fileName);
@@ -127,62 +127,67 @@ FireWeather::calculateFireWeather(int month,int durationOfBurn)
     float b=(Tp-To)/(std::sqrt(std::abs(hp-ho)));
     //TODO: check range of value
     if(t > hn && t <= hx){
-        temperature = Tn+alpha*(((t-hn)/(hx-hn))*(Pi/2));
+        m_temperature = Tn+alpha*(((t-hn)/(hx-hn))*(Pi/2));
     }
     if(t > hx && t < ho){
-        temperature = To + P * std::sin((Pi/2)+((t-hx)/4)*(Pi/2));
+        m_temperature = To + P * std::sin((Pi/2)+((t-hx)/4)*(Pi/2));
     }
     if(t >= ho || t <= hp){
-        temperature = To + b * std::sqrt(std::abs(t-ho));
+        m_temperature = To + b * std::sqrt(std::abs(t-ho));
     }
 
     //derive relative humidity from distribution
-    relHumidity = utility::random(m_relativeHumidityParameter[month].param1,
+    m_relHumidity = utility::random(m_relativeHumidityParameter[month].param1,
                                   m_relativeHumidityParameter[month].param2);
 
     //determine wind conditions
-    windDirection = 0;
+    m_windDirection = 0;
     // if it is not calm and staying calm, or wind does not cease, let there be wind.
-    if(windyConditions == false){
+    if(m_windyConditions == false){
         if(utility::random()<m_windConditionChange[month].stayCalm){
-            windyConditions = false;
-            windSpeed = 0.0;
+            m_windyConditions = false;
+            m_windSpeed = 0.0;
         } else
         {
-            windyConditions = true;
+            m_windyConditions = true;
             //determine wind direction
-            while(windDirection == 0){
+            while(m_windDirection == 0){
                 for(int k = 0; k<WindDirectionsCount ;++k) {
                     if (utility::random() < m_windDirectionProbability[month][k]) {
-                        windDirection = k;
+                        m_windDirection = k;
                     }
                 }
             }
             //derive wind speed from distribution
-            windSpeed = utility::weibull_random(m_windSpeedParameter[month].param1,
+            m_windSpeed = utility::weibull_random(m_windSpeedParameter[month].param1,
                                                 m_windSpeedParameter[month].param2);
         }
     } else {
         if(utility::random()<m_windConditionChange[month].windyToCalm){
-            windyConditions = false;
-            windSpeed = 0.0;
+            m_windyConditions = false;
+            m_windSpeed = 0.0;
         }
         else
         {
-            windyConditions = true;
+            m_windyConditions = true;
             //determine wind direction --> undefined behavior if wd is not set.
-            while(windDirection == 0){
+            while(m_windDirection == 0){
                 for(int k = 0; k<WindDirectionsCount ;++k) {
                     if (utility::random() < m_windDirectionProbability[month][k]) {
-                        windDirection = k;
+                        m_windDirection = k;
                     }
                 }
             }
             //derive wind speed from distribution
-            windSpeed = utility::weibull_random(m_windSpeedParameter[month].param1,
+            m_windSpeed = utility::weibull_random(m_windSpeedParameter[month].param1,
                                                 m_windSpeedParameter[month].param2);
         }
     }
 }
 
-}//namespace wildland_firesim
+void FireWeather::setWindyConditions(bool windyConditions)
+{
+    m_windyConditions = windyConditions;
+}
+
+} // namespace wildland_firesim

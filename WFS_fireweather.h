@@ -6,11 +6,13 @@
 #include <vector>
 #include <sstream>
 #include <cmath>
-#include "csvreader.h"
-#include "utility.h"
+
 #include "globals.h"
 #include "cell.h"
+#include "csvreader.h"
 #include "fire.h"
+#include "month.h"
+#include "utility.h"
 
 namespace wildland_firesim {
 
@@ -45,14 +47,14 @@ public:
      * extracts meteorological parameters from file.
      * \param fileName
      */
-    void importMeteorologicalParameter(const std::string fileName);
+    void importMeteorologicalParameter(const std::string &fileName);
 
     /*!
      * \brief getFixedFireWeatherParameter
      * imports fixed fire weather parameter from file.
      * \param fileName
      */
-    void getFixedFireWeatherParameter(const std::string fileName, FireWeatherVariables *weather);
+    static void getFixedFireWeatherParameter(const std::string &fileName, FireWeatherVariables *weather);
 
     /*!
      * \brief calculateFireWeather
@@ -74,12 +76,7 @@ public:
      */
     void setStartingTime(int startOfFire);
 
-    //Meteorological Variables
-    bool windyConditions;
-    float windSpeed;
-    int windDirection;
-    float relHumidity;
-    float temperature;
+    void setWindyConditions(bool windyConditions);
 
 private:
     distrParameter<float> m_minimumDailyTemperatureParameter[NumberOfMonths];
@@ -93,6 +90,13 @@ private:
     // Tn: min temperature, Tx: max temperature, Tp: min temperature of following day
     float Tn, Tx, Tp;
     int startingTime; //time for fire weather
+
+    //Meteorological Variables
+    bool m_windyConditions;
+    float m_windSpeed;
+    int m_windDirection;
+    float m_relHumidity;
+    float m_temperature;
 };
 
 } //namespace wildland_firesim

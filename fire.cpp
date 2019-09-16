@@ -8,7 +8,7 @@ constexpr int numberOfCellInternSpreadDirections = 3;
 
 }
 
-Fire::Fire() : burningCellInformationVector()
+Fire::Fire() : m_burningCellInformationVector()
 {
 
 }
@@ -20,130 +20,130 @@ Fire::spreadFire(LandscapeInterface *landscape, const FireWeatherVariables &weat
     std::vector<pointFireSourceInformation> pointFireSourceInformationVector;
 
     //calculate distance to cell boundaries
-    distance_to_cell_boundary[0] = static_cast<float>(landscape->getCellSize());
-    distance_to_cell_boundary[1] = std::sqrt(2.f) * landscape->getCellSize();
-    distance_to_cell_boundary[2] = static_cast<float>(landscape->getCellSize());
+    m_distance_to_cell_boundary[0] = static_cast<float>(landscape->getCellSize());
+    m_distance_to_cell_boundary[1] = std::sqrt(2.f) * landscape->getCellSize();
+    m_distance_to_cell_boundary[2] = static_cast<float>(landscape->getCellSize());
 
     // start cellwise routine
     // simulate fire spread within cells (per timestep)
     // iterate over vector with coordinates of all cells burning
-    for(size_t i = 0; i<burningCellInformationVector.size(); i++){
-        int x = burningCellInformationVector[i].xCoord;
-        int y = burningCellInformationVector[i].yCoord;
+    for(size_t i = 0; i<m_burningCellInformationVector.size(); i++){
+        int x = m_burningCellInformationVector[i].xCoord;
+        int y = m_burningCellInformationVector[i].yCoord;
 
         //access the respective cell
-        Cell* cell = landscape->getCellInformation(x,y);
+        const auto *cell = landscape->getCellInformation(x, y);
 
         //calculate input variables for fire spread
         float fuelLoad = cell->liveBiomass +
                 cell->deadBiomass;
         float degreeOfCuring = cell->deadBiomass / fuelLoad;
-        float fuelMoisture = estimateGrassFuelMoisture(weather.temperature,
-                                                       weather.relHumidity,
-                                                       degreeOfCuring);
-        float availableFuel = fuelLoad * estimateFuelAvailability(fuelMoisture);
+        float fuelMoisture = Fire::estimateGrassFuelMoisture(weather.temperature,
+                                                             weather.relHumidity,
+                                                             degreeOfCuring);
+        float availableFuel = fuelLoad * Fire::estimateFuelAvailability(fuelMoisture);
 
         //calculate headfire rate of spread
         //float headFireRateOfSpread = calculateHeadFireRateOfSpread(fuelMoisture, weather.windSpeed);
-        float headFireRateOfSpread = calculateHeadFireRateOfSpread(fuelLoad, fuelMoisture,
-                                                                   weather.relHumidity,
-                                                                   weather.windSpeed);
+        float headFireRateOfSpread = Fire::calculateHeadFireRateOfSpread(fuelLoad, fuelMoisture,
+                                                                         weather.relHumidity,
+                                                                         weather.windSpeed);
 
         // initialize fireline Intensity sum for vegetation effects
         float sumIntensity = 0.0;
 
         // access burn status (cell intern routine)
-        for(size_t k = 0; k<burningCellInformationVector[i].burnStatus.size(); k++){
+        for(size_t k = 0; k<m_burningCellInformationVector[i].burnStatus.size(); k++){
             //get rate of spread within the burning cell
             // vector also required for ignition of point fire source
-            float rateOfSpread = calculateDirectionalRateOfSpread(weather.windSpeed,
-                                                                  weather.windDirection,
-                                                                  headFireRateOfSpread,
-                                                                  burningCellInformationVector[i].spreadDirection[k]);
+            float rateOfSpread = Fire::calculateDirectionalRateOfSpread(weather.windSpeed,
+                                                                        weather.windDirection,
+                                                                        headFireRateOfSpread,
+                                                                        m_burningCellInformationVector[i].spreadDirection[k]);
 
             //sum fireline within cell
             sumIntensity = sumIntensity+calculateFirelineIntensity(rateOfSpread,availableFuel);
 
             //if vertex is already reached by the fire continue.
-            if(burningCellInformationVector[i].burnStatus[k] >= 1.f) continue;
+            if(m_burningCellInformationVector[i].burnStatus[k] >= 1.f) continue;
 
             //update burn status
-            burningCellInformationVector[i].burnStatus[k] = (rateOfSpread*timestepLength)/distance_to_cell_boundary[k] +
-                    burningCellInformationVector[i].burnStatus[k];
+            m_burningCellInformationVector[i].burnStatus[k] = (rateOfSpread*timestepLength)/m_distance_to_cell_boundary[k] +
+                    m_burningCellInformationVector[i].burnStatus[k];
 
-            if(burningCellInformationVector[i].burnStatus[k] >= 1.f){
+            if(m_burningCellInformationVector[i].burnStatus[k] >= 1.f){
                 //new point fire source
                 pointFireSourceInformation newPointFireSource;
                 //establish new point fire source by adding vertex coordinates to pointFireSources vector
-                if(burningCellInformationVector[i].spreadDirection[k]==1){
-                    newPointFireSource.uCoord = burningCellInformationVector[i].uCoordSource;
-                    newPointFireSource.vCoord = burningCellInformationVector[i].vCoordSource+1;
+                if(m_burningCellInformationVector[i].spreadDirection[k]==1){
+                    newPointFireSource.uCoord = m_burningCellInformationVector[i].uCoordSource;
+                    newPointFireSource.vCoord = m_burningCellInformationVector[i].vCoordSource+1;
                 }
-                if(burningCellInformationVector[i].spreadDirection[k]==2){
-                    newPointFireSource.uCoord = burningCellInformationVector[i].uCoordSource+1;
-                    newPointFireSource.vCoord = burningCellInformationVector[i].vCoordSource+1;
+                if(m_burningCellInformationVector[i].spreadDirection[k]==2){
+                    newPointFireSource.uCoord = m_burningCellInformationVector[i].uCoordSource+1;
+                    newPointFireSource.vCoord = m_burningCellInformationVector[i].vCoordSource+1;
                 }
-                if(burningCellInformationVector[i].spreadDirection[k]==3){
-                    newPointFireSource.uCoord = burningCellInformationVector[i].uCoordSource+1;
-                    newPointFireSource.vCoord = burningCellInformationVector[i].vCoordSource;
+                if(m_burningCellInformationVector[i].spreadDirection[k]==3){
+                    newPointFireSource.uCoord = m_burningCellInformationVector[i].uCoordSource+1;
+                    newPointFireSource.vCoord = m_burningCellInformationVector[i].vCoordSource;
                 }
-                if(burningCellInformationVector[i].spreadDirection[k]==4){
-                    newPointFireSource.uCoord = burningCellInformationVector[i].uCoordSource+1;
-                    newPointFireSource.vCoord = burningCellInformationVector[i].vCoordSource-1;
+                if(m_burningCellInformationVector[i].spreadDirection[k]==4){
+                    newPointFireSource.uCoord = m_burningCellInformationVector[i].uCoordSource+1;
+                    newPointFireSource.vCoord = m_burningCellInformationVector[i].vCoordSource-1;
                 }
-                if(burningCellInformationVector[i].spreadDirection[k]==5){
-                    newPointFireSource.uCoord = burningCellInformationVector[i].uCoordSource;
-                    newPointFireSource.vCoord = burningCellInformationVector[i].vCoordSource-1;
+                if(m_burningCellInformationVector[i].spreadDirection[k]==5){
+                    newPointFireSource.uCoord = m_burningCellInformationVector[i].uCoordSource;
+                    newPointFireSource.vCoord = m_burningCellInformationVector[i].vCoordSource-1;
                 }
-                if(burningCellInformationVector[i].spreadDirection[k]==6){
-                    newPointFireSource.uCoord = burningCellInformationVector[i].uCoordSource-1;
-                    newPointFireSource.vCoord = burningCellInformationVector[i].vCoordSource-1;
+                if(m_burningCellInformationVector[i].spreadDirection[k]==6){
+                    newPointFireSource.uCoord = m_burningCellInformationVector[i].uCoordSource-1;
+                    newPointFireSource.vCoord = m_burningCellInformationVector[i].vCoordSource-1;
                 }
-                if(burningCellInformationVector[i].spreadDirection[k]==7){
-                    newPointFireSource.uCoord = burningCellInformationVector[i].uCoordSource-1;
-                    newPointFireSource.vCoord = burningCellInformationVector[i].vCoordSource;
+                if(m_burningCellInformationVector[i].spreadDirection[k]==7){
+                    newPointFireSource.uCoord = m_burningCellInformationVector[i].uCoordSource-1;
+                    newPointFireSource.vCoord = m_burningCellInformationVector[i].vCoordSource;
                 }
-                if(burningCellInformationVector[i].spreadDirection[k]==8){
-                    newPointFireSource.uCoord = burningCellInformationVector[i].uCoordSource-1;
-                    newPointFireSource.vCoord = burningCellInformationVector[i].vCoordSource+1;
+                if(m_burningCellInformationVector[i].spreadDirection[k]==8){
+                    newPointFireSource.uCoord = m_burningCellInformationVector[i].uCoordSource-1;
+                    newPointFireSource.vCoord = m_burningCellInformationVector[i].vCoordSource+1;
                 }
                 //calculate fireline intensity of the section of the fire front
                 newPointFireSource.fireIntensity = (calculateFirelineIntensity(rateOfSpread,availableFuel));
                 //calculate remaining time at certain pointFireSource
-                newPointFireSource.remainingTime = (static_cast<int>(round(((burningCellInformationVector[i].burnStatus[k]-1) *
-                                                                            distance_to_cell_boundary[k]) / rateOfSpread)));
+                newPointFireSource.remainingTime = (static_cast<int>(round(((m_burningCellInformationVector[i].burnStatus[k]-1) *
+                                                                            m_distance_to_cell_boundary[k]) / rateOfSpread)));
                 //append new point fire source to vector
                 pointFireSourceInformationVector.push_back(newPointFireSource);
                 //set burnStatus to 1
-                burningCellInformationVector[i].burnStatus[k] = 1.f;
+                m_burningCellInformationVector[i].burnStatus[k] = 1.f;
             }
         }//end cell intern routine
-        burningCellInformationVector[i].meanFirelineIntensity = sumIntensity /
-                burningCellInformationVector[i].burnStatus.size();
+        m_burningCellInformationVector[i].meanFirelineIntensity = sumIntensity /
+                m_burningCellInformationVector[i].burnStatus.size();
     }//end cellwise routine for firespread
 
     //cellwise routine for burn-out of cells
-    for(size_t i = 0; i < burningCellInformationVector.size(); i++){
-        int x = burningCellInformationVector[i].xCoord;
-        int y = burningCellInformationVector[i].yCoord;
+    for(size_t i = 0; i < m_burningCellInformationVector.size(); i++){
+        int x = m_burningCellInformationVector[i].xCoord;
+        int y = m_burningCellInformationVector[i].yCoord;
 
         //access the respective cell
         Cell* cell = landscape->getCellInformation(x,y);
 
         //summation of burnstatus within respective cell
         float summarizedBurnStatus = 0.f;
-        for(size_t q = 0; q<burningCellInformationVector[i].burnStatus.size(); q++){
-            summarizedBurnStatus = summarizedBurnStatus + burningCellInformationVector[i].burnStatus[q];
+        for(size_t q = 0; q<m_burningCellInformationVector[i].burnStatus.size(); q++){
+            summarizedBurnStatus = summarizedBurnStatus + m_burningCellInformationVector[i].burnStatus[q];
         }
 
         //if all burnstates are 1 or mean intensity is lower 20.0 (self-extinguished fire in Gauteng), the cell burns out.
-        if(summarizedBurnStatus >= burningCellInformationVector[i].burnStatus.size() ||
-                ((burningCellInformationVector[i].meanFirelineIntensity) <= 20.f)){
+        if(summarizedBurnStatus >= m_burningCellInformationVector[i].burnStatus.size() ||
+                ((m_burningCellInformationVector[i].meanFirelineIntensity) <= 20.f)){
 
             cell->state = CellState::BurnedOut;
             //remove burned-out cells from burning cell vector
-            burningCellInformationVector.erase(burningCellInformationVector.begin() + i);
-            numberOfCellsBurning--;
+            m_burningCellInformationVector.erase(m_burningCellInformationVector.begin() + i);
+            m_numberOfCellsBurning--;
         }
     } //end cellwise routine for cell burn-out
 
@@ -178,20 +178,20 @@ Fire::spreadFire(LandscapeInterface *landscape, const FireWeatherVariables &weat
                     float fuelLoad = cell->liveBiomass +
                             cell->deadBiomass;
                     float degreeOfCuring = (cell->deadBiomass/ fuelLoad);
-                    float fuelMoisture = estimateGrassFuelMoisture(weather.temperature,
-                                                                   weather.relHumidity,
-                                                                   degreeOfCuring);
+                    float fuelMoisture = Fire::estimateGrassFuelMoisture(weather.temperature,
+                                                                         weather.relHumidity,
+                                                                         degreeOfCuring);
 
                     // test for ignition
-                    if(utility::random() < calculateCellIgnitionProbability(pointFireSourceInformationVector[i].fireIntensity,
-                                                                          fuelMoisture)){
+                    if(utility::random() < Fire::calculateCellIgnitionProbability(pointFireSourceInformationVector[i].fireIntensity,
+                                                                                  fuelMoisture)){
                         //set cell state to burning
                         burningCellInformation newBurningCell;
                         newBurningCell.uCoordSource = pointFireSourceInformationVector[i].uCoord;
                         newBurningCell.vCoordSource = pointFireSourceInformationVector[i].vCoord;
                         cell->state = CellState::Burning;
                         newBurningCell.meanFirelineIntensity = 0.0;
-                        numberOfCellsBurning++;
+                        m_numberOfCellsBurning++;
                         //add coordinates to cellsBurning vector
                         newBurningCell.xCoord = cellsToIgnite[l][0];
                         newBurningCell.yCoord = cellsToIgnite[l][1];
@@ -207,15 +207,15 @@ Fire::spreadFire(LandscapeInterface *landscape, const FireWeatherVariables &weat
                             float headFireRateOfSpread = calculateHeadFireRateOfSpread(fuelMoisture,
                                                                                        weather.windSpeed);
                             */
-                            float rateOfSpread =  calculateDirectionalRateOfSpread(weather.windSpeed,
-                                                                                   weather.windDirection,
-                                                                                   headFireRateOfSpread,
-                                                                                   newBurningCell.spreadDirection[ll]);
+                            float rateOfSpread =  Fire::calculateDirectionalRateOfSpread(weather.windSpeed,
+                                                                                         weather.windDirection,
+                                                                                         headFireRateOfSpread,
+                                                                                         newBurningCell.spreadDirection[ll]);
                             //update burn status
                             newBurningCell.burnStatus.push_back((rateOfSpread*pointFireSourceInformationVector[i].remainingTime) /
-                                                                distance_to_cell_boundary[ll]);
+                                                                m_distance_to_cell_boundary[ll]);
                         }
-                        burningCellInformationVector.push_back(newBurningCell);
+                        m_burningCellInformationVector.push_back(newBurningCell);
                     }
                 }
             }
@@ -227,8 +227,8 @@ void
 Fire::initiateWildFire(LandscapeInterface *landscape, const FireWeatherVariables &weather)
 {
     //set counter for burning cells to zero as no cell is burning before the fire is ignited
-    numberOfCellsBurning = 0;
-    burningCellInformationVector.clear();
+    m_numberOfCellsBurning = 0;
+    m_burningCellInformationVector.clear();
 
     //choose random vertex within landscape grid
     int u = utility::random(landscape->getWidth() - 1);
@@ -275,9 +275,9 @@ Fire::initiateWildFire(LandscapeInterface *landscape, const FireWeatherVariables
                         newBurningCell.spreadDirection.push_back(direction[l][ll]);
                         newBurningCell.burnStatus.push_back(0.f);
                     }
-                    burningCellInformationVector.push_back(newBurningCell);
+                    m_burningCellInformationVector.push_back(newBurningCell);
                     newBurningCell.meanFirelineIntensity = 0.0;
-                    numberOfCellsBurning++;
+                    m_numberOfCellsBurning++;
                 }
             }
         }
@@ -289,8 +289,8 @@ void
 Fire::setCenteredIgnitionPoint(LandscapeInterface *landscape)
 {
     //set counter for burning cells to zero as no cell is burning before the fire is ignited
-    numberOfCellsBurning = 0;
-    burningCellInformationVector.clear();
+    m_numberOfCellsBurning = 0;
+    m_burningCellInformationVector.clear();
 
     //calculate coordinates of central vertex
     int u = static_cast<int>(round(landscape->getWidth()/2));
@@ -329,8 +329,8 @@ Fire::setCenteredIgnitionPoint(LandscapeInterface *landscape)
                         newBurningCell.burnStatus.push_back(0.f);
                     }
                     newBurningCell.meanFirelineIntensity = 0.0;
-                    burningCellInformationVector.push_back(newBurningCell);
-                    numberOfCellsBurning++;
+                    m_burningCellInformationVector.push_back(newBurningCell);
+                    m_numberOfCellsBurning++;
             }
         }
     }
@@ -436,6 +436,18 @@ Fire::estimateFuelAvailability(const float grassMoistureContent){
         fuelAvailability = 1.f;
     }
     return fuelAvailability;
+}
+
+int
+Fire::getNumberOfCellsBurning() const noexcept
+{
+    return m_numberOfCellsBurning;
+}
+
+const std::vector<Fire::burningCellInformation>
+Fire::getBurningCellInformation() const noexcept
+{
+    return m_burningCellInformationVector;
 }
 
 }  // namespace wildland_firesim

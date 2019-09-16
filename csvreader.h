@@ -24,7 +24,7 @@ public:
      * \param fileName
      * \return
      */
-    std::vector<std::vector<std::string>> parse(std::string fileName);
+    std::vector<std::vector<std::string>> parse(const std::string &fileName);
 
 private:
   char m_delimiter;

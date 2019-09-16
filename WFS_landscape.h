@@ -61,6 +61,8 @@ public:
      */
     Cell *getCellInformation(int x, int y) override;
 
+    const Cell *getCellInformation(int x, int y) const override;
+
     /*!
      * \brief getCellSize
      * returns the cell size.

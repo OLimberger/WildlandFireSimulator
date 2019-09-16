@@ -3,11 +3,13 @@
 
 #include <iostream>
 #include <string>
-#include "utility.h"
+
 #include "globals.h"
+#include "fire.h"
+#include "month.h"
+#include "utility.h"
 #include "WFS_landscape.h"
 #include "WFS_fireweather.h"
-#include "fire.h"
 #include "WFS_output.h"
 
 namespace wildland_firesim{
@@ -21,8 +23,6 @@ class Simulation
 public:
     Simulation();
 
-    Month stringToMonth(std::string m);
-
     /*!
      * \brief runSimulation
      * runs the simulation and logs output data.
@@ -33,20 +33,39 @@ public:
     void runSimulation(WFS_Landscape *landscape, const FireWeatherVariables &weather,
                        FireWeather weathersim, Output *output);
 
-    int numberOfRuns;
-    int maxFireDuration;
-    bool simulateFireWeather;
-    bool importLandscape;
-    bool igniteCentralVertex;
-    Month whichMonth;
+    void setTimestepLength(int timestepLength) { m_timestepLength = timestepLength; }
 
-    int timestepLength;
-    float timeScalingFactor;
+    void setMaxFireDuration(int maxFireDuration) { m_maxFireDuration = maxFireDuration; }
 
-    std::string nameOfMeteorologicalParameterFile;
-    std::string nameOfLandscapeParameterFile;
+    int getNumberOfRuns() const noexcept { return m_numberOfRuns; }
+    void setNumberOfRuns(int numberOfRuns) { m_numberOfRuns = numberOfRuns; }
 
-    Fire fire;
+    void setIgniteCentralVertex(bool igniteCentralVertex) {
+        m_igniteCentralVertex = igniteCentralVertex;
+    }
+
+    bool getSimulateFireWeather() const noexcept { return m_simulateFireWeather; }
+    void setSimulateFireWeather(bool simulateFireWeather) {
+        m_simulateFireWeather = simulateFireWeather;
+    }
+
+    bool setMonth(const std::string &month);
+
+    const Fire &getFire() const noexcept { return m_fire; }
+
+private:
+    int m_numberOfRuns;
+    int m_maxFireDuration;
+    bool m_simulateFireWeather;
+    bool m_igniteCentralVertex;
+    Month m_whichMonth;
+
+    int m_timestepLength;
+    float m_timeScalingFactor;
+
+    std::string m_nameOfMeteorologicalParameterFile;
+
+    Fire m_fire;
 };
 
 }  // namespace wildland_firesim

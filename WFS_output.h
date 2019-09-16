@@ -21,35 +21,35 @@ public:
      * \param landscape
      * \param fileName
      */
-    void writeBurnMapToASCII(LandscapeInterface &landscape, std::string fileName);
+    static void writeBurnMapToASCII(const LandscapeInterface &landscape, const std::string &fileName);
     /*!
      * \brief writeVegetationMapToASCII
      * Function to write vegetation types into an ascii-grid.
      * \param landscape
      * \param fileName
      */
-    void writeVegetationMapToASCII(LandscapeInterface &landscape, std::string fileName);
+    static void writeVegetationMapToASCII(const LandscapeInterface &landscape, const std::string &fileName);
     /*!
      * \brief writeVegetationDataToCSV
      * Function to write vegetation parameters into a csv-Table
      * \param landscape
      * \param fileName
      */
-    void writeVegetationDataToCSV(LandscapeInterface &landscape, std::string fileName);
+    static void writeVegetationDataToCSV(const LandscapeInterface &landscape, const std::string &fileName);
     /*!
      * \brief writeFireWeatherDataToCSV
      * Function to write weather data into a csv-Table
      * \param landscape
      * \param fileName
      */
-    void writeFireWeatherDataToCSV(std::vector<std::string> weatherData , std::string fileName);
+    void writeFireWeatherDataToCSV(const std::string &fileName);
 
     /*!
      * \brief writeBurnDataToCSV
      * \param landscape
      * \param fileName
      */
-    void writeBurnDataToCSV(LandscapeInterface &landscape, Fire &fire, std::string fileName);
+    static void writeBurnDataToCSV(const LandscapeInterface &landscape, const Fire &fire, const std::string &fileName);
     /*!
      * \brief setfileName
      * Function to generate file names.
@@ -58,7 +58,7 @@ public:
      * \param i
      * \return
      */
-    std::string setfileName(std::string baseName, std::string extention, int i);
+    static std::string createFilename(const std::string &baseName, const std::string &extention, int i);
     /*!
      * \brief storeWeatherData
      * Function to extract weather data at a certain time.
@@ -68,7 +68,11 @@ public:
      */
     std::string storeWeatherData(const FireWeatherVariables &weather, float durationOfBurn);
 
-    std::vector<std::string> weatherData;
+    void addWeatherData(const std::string &line);
+    void clearWeatherData();
+
+private:
+    std::vector<std::string> m_weatherData;
 };
 
 } //namespace wildland_firesim

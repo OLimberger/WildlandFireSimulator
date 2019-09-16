@@ -10,7 +10,7 @@ Reader::Reader(char delimiter, char comment)
 {}
 
 std::vector<std::vector<std::string>>
-Reader::parse(std::string fileName)
+Reader::parse(const std::string &fileName)
 {
     std::ifstream input_stream{fileName};
 

@@ -17,51 +17,42 @@ Simulation::runSimulation(WFS_Landscape *landscape, const FireWeatherVariables &
     float nextHour = 1.0;
 
     //weather conditions at begin of fire
-    weatherSim.windyConditions = true; //at start of the fire there is wind
-    if(simulateFireWeather){
+    weatherSim.setWindyConditions(true); // at start of the fire there is wind
+    if(m_simulateFireWeather){
         weatherSim.setStartingTime(12); //fires start at 12 o'clock
-        weatherSim.calculateFireWeather(whichMonth, 0);
-        output->weatherData.push_back(output->storeWeatherData(weather, durationOfBurn));
+        weatherSim.calculateFireWeather(m_whichMonth, 0);
+        output->addWeatherData(output->storeWeatherData(weather, durationOfBurn));
     }
 
     //igniting the fire
-    if(igniteCentralVertex){
-        fire.setCenteredIgnitionPoint(landscape);
+    if(m_igniteCentralVertex){
+        m_fire.setCenteredIgnitionPoint(landscape);
     } else {
-        fire.initiateWildFire(landscape, weather);
+        m_fire.initiateWildFire(landscape, weather);
     }
 
     //simulate fire spread
-    while((fire.numberOfCellsBurning != 0) && (numberOfTimesteps < maxFireDuration)){
-        if(simulateFireWeather && durationOfBurn >= nextHour){
-            weatherSim.calculateFireWeather(whichMonth, static_cast<int>(std::floor(durationOfBurn)));
-            output->weatherData.push_back(output->storeWeatherData(weather, durationOfBurn));
+    while((m_fire.getNumberOfCellsBurning() != 0) && (numberOfTimesteps < m_maxFireDuration)){
+        if(m_simulateFireWeather && durationOfBurn >= nextHour){
+            weatherSim.calculateFireWeather(m_whichMonth, static_cast<int>(std::floor(durationOfBurn)));
+            output->addWeatherData(output->storeWeatherData(weather, durationOfBurn));
             nextHour = std::floor(durationOfBurn+1);
         }
-        fire.spreadFire(landscape, weather, timestepLength);
-        durationOfBurn = (numberOfTimesteps * timestepLength)/(60.f*60.f);
+        m_fire.spreadFire(landscape, weather, m_timestepLength);
+        durationOfBurn = (numberOfTimesteps * m_timestepLength)/(60.f*60.f);
         numberOfTimesteps++;
     }
 }
 
+bool Simulation::setMonth(const std::string &month)
+{
+    const auto res = stringToMonth(month);
 
-Month
-Simulation::stringToMonth(std::string m){
-    std::vector<std::string> abrMonth{
-        {"JAN"}, {"FEB"}, {"MAR"}, {"APR"}, {"MAY"}, {"JUN"},
-        {"JUL"}, {"AUG"}, {"SEP"}, {"OCT"}, {"NOV"}, {"DEC"}
-    };
-    std::vector<Month> enumMonth{
-        Month::January, Month::February, Month::March, Month::April, Month::May, Month::June,
-        Month::June, Month::July, Month::September, Month::October, Month::November, Month::December
-    };
-    Month month;
-    for(size_t i = 0; i<abrMonth.size(); i++){
-        if(m == abrMonth[i]){
-            month = enumMonth[i];
-        }
+    if (res.success) {
+        m_whichMonth = res.value;
     }
-    return month; //warning if used uninitialized?!
+
+    return res.success;
 }
 
 }  // namespace wildland_firesim

@@ -36,6 +36,8 @@ public:
      */
     virtual Cell *getCellInformation(int x, int y) = 0;
 
+    virtual const Cell *getCellInformation(int x, int y) const = 0;
+
     /*!
      * \brief getCellSize
      * \return

@@ -74,12 +74,16 @@ public:
         std::vector<int> spreadDirection;
     };
 
-    std::vector<burningCellInformation> burningCellInformationVector;
+    int getNumberOfCellsBurning() const noexcept;
 
-    float distance_to_cell_boundary[3];
-    int numberOfCellsBurning;
+    const std::vector<burningCellInformation> getBurningCellInformation() const noexcept;
 
-private:
+private:    
+    std::vector<burningCellInformation> m_burningCellInformationVector;
+
+    float m_distance_to_cell_boundary[3];
+    int m_numberOfCellsBurning;
+
     int heatYield = 17000;
 
     struct pointFireSourceInformation{
@@ -101,8 +105,8 @@ private:
      * \param windSpeed
      * \return head fire rate of spread
     */
-    float calculateHeadFireRateOfSpread(const float fuelload, const float moistureContent,
-                                        const float relHumidity, const float windspeed);
+    static float calculateHeadFireRateOfSpread(const float fuelload, const float moistureContent,
+                                               const float relHumidity, const float windspeed);
 
     /*!
      * \brief calculateDirectionalRateOfSpread
@@ -120,8 +124,8 @@ private:
      * \param directionOfFireSpread
      * \return
      */
-    float calculateDirectionalRateOfSpread(const float windSpeed, const int windDirection,
-                                           const float headFireRateOfSpread, const int directionOfFireSpread);
+    static float calculateDirectionalRateOfSpread(const float windSpeed, const int windDirection,
+                                                  const float headFireRateOfSpread, const int directionOfFireSpread);
 
     /*!
      * \brief estimateGrassFuelMoisture
@@ -133,8 +137,8 @@ private:
      * \param curing
      * \return
      */
-    float estimateGrassFuelMoisture(const float temperature, const float relativeHumidity,
-                                    const float curing);
+    static float estimateGrassFuelMoisture(const float temperature, const float relativeHumidity,
+                                           const float curing);
 
     /*!
      * \brief estimateAvailableFuelLoad
@@ -142,7 +146,7 @@ private:
      * \param grassMoistureContent
      * \return
      */
-    float estimateFuelAvailability(const float grassMoistureContent);
+    static float estimateFuelAvailability(const float grassMoistureContent);
 
     /*!
      * \brief calculateFirelineIntensity
@@ -164,8 +168,8 @@ private:
      * \param moistureContent
      * \return
      */
-    float calculateCellIgnitionProbability(const float intensity,
-                                           const float moistureContent);
+    static float calculateCellIgnitionProbability(const float intensity,
+                                                  const float moistureContent);
 
     /*!
      * \brief calculateInitialIgnitionProbability
@@ -175,7 +179,7 @@ private:
      * \param grassFuelMoisture
      * \return
      */
-    float calculateInitialIgnitionProbability(const float grassFuelMoisture);
+    static float calculateInitialIgnitionProbability(const float grassFuelMoisture);
 
 };
 

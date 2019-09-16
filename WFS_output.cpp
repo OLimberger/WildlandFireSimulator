@@ -4,13 +4,13 @@
 
 namespace wildland_firesim {
 
-Output::Output(): weatherData()
+Output::Output(): m_weatherData()
 {
 
 }
 
 std::string
-Output::setfileName(std::string baseName, std::string extention, int i)
+Output::createFilename(const std::string &baseName, const std::string &extention, int i)
 {
     std::stringstream ss;
     ss << baseName << i << extention;
@@ -20,7 +20,7 @@ Output::setfileName(std::string baseName, std::string extention, int i)
 
 //functions for printing map to ASCII grid
 void
-Output::writeBurnMapToASCII(LandscapeInterface &landscape, std::string fileName)
+Output::writeBurnMapToASCII(const LandscapeInterface &landscape, const std::string &fileName)
 {
     // create variable for output file stream
     std::ofstream burnDataFile;
@@ -44,7 +44,7 @@ Output::writeBurnMapToASCII(LandscapeInterface &landscape, std::string fileName)
 }
 
 void
-Output::writeVegetationMapToASCII(LandscapeInterface &landscape, std::string fileName)
+Output::writeVegetationMapToASCII(const LandscapeInterface &landscape, const std::string &fileName)
 {
     std::ofstream vegetationTypeDataFile;
     //vegetationTypeDataFile.open("output/"+fileName);
@@ -67,7 +67,7 @@ Output::writeVegetationMapToASCII(LandscapeInterface &landscape, std::string fil
 
 //functions to write csv-files
 void
-Output::writeVegetationDataToCSV(LandscapeInterface &landscape, std::string fileName)
+Output::writeVegetationDataToCSV(const LandscapeInterface &landscape, const std::string &fileName)
 {
     std::ofstream vegetationDataFile;
     //vegetationDataFile.open("output/"+fileName);
@@ -90,7 +90,7 @@ Output::writeVegetationDataToCSV(LandscapeInterface &landscape, std::string file
 }
 
 void
-Output::writeBurnDataToCSV(LandscapeInterface &landscape, Fire &fire, std::string fileName)
+Output::writeBurnDataToCSV(const LandscapeInterface &landscape, const Fire &fire, const std::string &fileName)
 {
     std::ofstream burnDataFile;
     //burnDataFile.open("output/"+fileName);
@@ -105,10 +105,9 @@ Output::writeBurnDataToCSV(LandscapeInterface &landscape, Fire &fire, std::strin
             burnDataFile << static_cast<int>(state) << ",";
 
             if(state==CellState::Burning){
-                for(size_t i = 0; i < fire.burningCellInformationVector.size(); i++){
-                    if(y == fire.burningCellInformationVector[i].yCoord &&
-                            x == fire.burningCellInformationVector[i].xCoord){
-                        burnDataFile << fire.burningCellInformationVector[i].meanFirelineIntensity;
+                for (const auto &burningCell : fire.getBurningCellInformation()) {
+                    if (y == burningCell.yCoord && x == burningCell.xCoord) {
+                        burnDataFile << burningCell.meanFirelineIntensity;
                     }
                 }
             }else{
@@ -120,14 +119,14 @@ Output::writeBurnDataToCSV(LandscapeInterface &landscape, Fire &fire, std::strin
 }
 
 void
-Output::writeFireWeatherDataToCSV(std::vector<std::string> weatherData , std::string fileName)
+Output::writeFireWeatherDataToCSV(const std::string &fileName)
 {
     std::ofstream weatherDataFile;
     //weatherDataFile.open("output/"+fileName);
     weatherDataFile.open(fileName);
     weatherDataFile << "t, temperature, relHumidity, windSpeed, windDirection" << std::endl;
-    for(size_t i = 0; i<weatherData.size(); i++){
-        weatherDataFile << weatherData[i] << "\n";
+    for (const auto &line : m_weatherData) {
+        weatherDataFile << line << "\n";
     }
     weatherDataFile.close();
 }
@@ -143,4 +142,16 @@ Output::storeWeatherData(const FireWeatherVariables &weather, float durationOfBu
     return weatherData.str();
 }
 
-}//namespace wildland_firesim
+void
+Output::addWeatherData(const std::string &line)
+{
+    m_weatherData.emplace_back(line);
+}
+
+void
+Output::clearWeatherData()
+{
+    m_weatherData.clear();
+}
+
+} //namespace wildland_firesim

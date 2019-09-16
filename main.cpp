@@ -170,40 +170,36 @@ int main(int argc, char *argv[] )
 
     //setup simulation
     //general parameters
-    fireSimulation.timestepLength = timestepLength;
-    fireSimulation.maxFireDuration = maximalFireDuration;
-    fireSimulation.numberOfRuns = numberOfRuns;
-
-    //import landscape option - uses files in folder
-    fireSimulation.importLandscape = importLandscape;
-
-    //enquire name of file for landscape creation
-    if(!importLandscape){
-        fireSimulation.nameOfLandscapeParameterFile = landscapeFile;
-    }
+    fireSimulation.setTimestepLength(timestepLength);
+    fireSimulation.setMaxFireDuration(maximalFireDuration);
+    fireSimulation.setNumberOfRuns(numberOfRuns);
 
     //specification of ignition location
-    fireSimulation.igniteCentralVertex = centeredIgnitionPoint;
+    fireSimulation.setIgniteCentralVertex(centeredIgnitionPoint);
 
     //specification fire weather simulation
-    fireSimulation.simulateFireWeather = simulateFireWeather;
+    fireSimulation.setSimulateFireWeather(simulateFireWeather);
     auto weather = FireWeatherVariables{};
 
     if (simulateFireWeather) {
         weatherSimulation.importMeteorologicalParameter(weatherFile);
-        fireSimulation.whichMonth = fireSimulation.stringToMonth(month);
+        if (fireSimulation.setMonth(month)) {
+            fprintf(stderr, "invalid month name \"%s\"\n", month);
+            exit(1);
+        }
     } else {
        weatherSimulation.getFixedFireWeatherParameter(fixedWeatherFile, &weather);
     }
 
     //start simulation(s) and data log
-    for (int i = 0; i < fireSimulation.numberOfRuns; i++) {
+    for (int i = 0; i < fireSimulation.getNumberOfRuns(); i++) {
         // create model landscape
         WFS_Landscape modelLandscape;
-        if (fireSimulation.importLandscape){
+        if (importLandscape) {
+            // import landscape option - uses files in folder
             modelLandscape.importLandscapeFromFile();
         } else {
-            modelLandscape.generateLandscapeFromFile(fireSimulation.nameOfLandscapeParameterFile);
+            modelLandscape.generateLandscapeFromFile(landscapeFile);
         }
         //vegetation data before burn
         //output.writeVegetationMapToASCII(modelLandscape, output.setfileName("vegetation_map", ".asc", i));
@@ -213,11 +209,11 @@ int main(int argc, char *argv[] )
         fireSimulation.runSimulation(&modelLandscape, weather, weatherSimulation, &output);
 
         //creating simulation output
-        output.writeBurnMapToASCII(modelLandscape, output.setfileName("burn_map", ".asc", i ));
-        output.writeBurnDataToCSV(modelLandscape, fireSimulation.fire, output.setfileName("burndata", ".csv", i));
-        if(fireSimulation.simulateFireWeather){
-            output.writeFireWeatherDataToCSV(output.weatherData, output.setfileName("weatherdata", ".csv", i ) );
-            output.weatherData.clear();
+        Output::writeBurnMapToASCII(modelLandscape, Output::createFilename("burn_map", ".asc", i));
+        Output::writeBurnDataToCSV(modelLandscape, fireSimulation.getFire(), Output::createFilename("burndata", ".csv", i));
+        if (fireSimulation.getSimulateFireWeather()) {
+            output.writeFireWeatherDataToCSV(Output::createFilename("weatherdata", ".csv", i));
+            output.clearWeatherData();
         }
     }
 
